@@ -11,6 +11,7 @@ SRCS =  $(RUNTIME) \
 	$(HAL_DIR)/peripherals/Source/mik32_hal_pcc.c \
 	$(HAL_DIR)/peripherals/Source/mik32_hal_gpio.c \
 	$(HAL_DIR)/peripherals/Source/mik32_hal_adc.c \
+	$(HAL_DIR)/core/Source/mik32_hal_scr1_timer.c \
 	$(SHARED_DIR)/libs/xprintf.c \
 	$(SHARED_DIR)/libs/uart_lib.c \
 	
