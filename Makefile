@@ -50,7 +50,7 @@ LIBS += -L/opt/riscv64/riscv64-unknown-elf/lib/rv32imac/ilp32 -lc
 
 OBJDIR = $(PROJECT_BUILD_DIR)
 
-CFLAGS +=  -Os -MD -fstrict-volatile-bitfields -fno-strict-aliasing -march=$(MARCH) -mabi=$(MABI) -fno-common -fno-builtin-printf -DBUILD_NUMBER=$(BUILD_NUMBER)+1
+CFLAGS +=  -Os -MD -fstrict-volatile-bitfields -fno-strict-aliasing -march=$(MARCH) -mabi=$(MABI) -fno-common -fno-builtin-printf -DBUILD_NUMBER=$(BUILD_NUMBER)+1 -flto -fno-common
 
 #LDFLAGS +=  -nostdlib -lgcc -mcmodel=medlow -nostartfiles -ffreestanding -Wl,-Bstatic,-T,$(LDSCRIPT),-Map,$(OBJDIR)/$(PROJECT_NAME).map,--print-memory-usage -march=$(MARCH) -mabi=$(MABI) -specs=nano.specs -lnosys -L $(SHARED_DIR)/ldscripts/
 LDFLAGS +=  -nostdlib -lgcc -mcmodel=medlow -nostartfiles -ffreestanding -Wl,-Bstatic,-T,$(LDSCRIPT),-Map,$(OBJDIR)/$(PROJECT_NAME).map,--print-memory-usage -march=$(MARCH) -mabi=$(MABI) -L $(SHARED_DIR)/ldscripts/
