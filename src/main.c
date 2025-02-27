@@ -1,3 +1,7 @@
+
+#define ADC_CONFIG_SAH_TIME_S          8
+#define ADC_CONFIG_SAH_TIME_M          (0x3F << ADC_CONFIG_SAH_TIME_S)
+
 #include "mik32_hal_adc.h"
 #include "mik32_hal_pcc.h"
 #include "mik32_hal_scr1_timer.h"
@@ -20,7 +24,6 @@
 #define	MIK32V2
 
 ADC_HandleTypeDef hadc;
-SCR1_TIMER_HandleTypeDef hscr1_timer;
 
 #define	ADC_OFFSET	172
 //#define	ADC_CHANNELS	3
@@ -85,7 +88,7 @@ int main()
 
 		if(count % 1000 == 0) {
 		xprintf("\n");
-		HAL_DelayMs(&hscr1_timer, 250);
+		HAL_Time_SCR1TIM_DelayMs(250);
 	}
 
 	count++;
@@ -113,12 +116,10 @@ void SystemClock_Config(void)
 
 static void Scr1_Timer_Init(void)
 {   
-	hscr1_timer.Instance = SCR1_TIMER;
+	/* Источник тактирования */
+	/* Делитель частоты 10-битное число */
 
-	hscr1_timer.ClockSource = SCR1_TIMER_CLKSRC_INTERNAL; /* Источник тактирования */
-	hscr1_timer.Divider = 0;							  /* Делитель частоты 10-битное число */
-
-	HAL_SCR1_Timer_Init(&hscr1_timer);
+	HAL_SCR1_Timer_Init(HAL_SCR1_TIMER_CLKSRC_INTERNAL, 0);
 }
 
 

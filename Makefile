@@ -51,7 +51,7 @@ OBJDIR = $(PROJECT_BUILD_DIR)
 
 CFLAGS +=  -Os -MD -fstrict-volatile-bitfields -fno-strict-aliasing -march=$(MARCH) -mabi=$(MABI) -fno-common -fno-builtin-printf -DBUILD_NUMBER=$(BUILD_NUMBER)+1
 
-LDFLAGS +=  -nostdlib -lgcc -mcmodel=medlow -nostartfiles -ffreestanding -Wl,-Bstatic,-T,$(LDSCRIPT),-Map,$(OBJDIR)/$(PROJECT_NAME).map,--print-memory-usage -march=$(MARCH) -mabi=$(MABI) -specs=nano.specs -lnosys
+LDFLAGS +=  -nostdlib -lgcc -mcmodel=medlow -nostartfiles -ffreestanding -Wl,-Bstatic,-T,$(LDSCRIPT),-Map,$(OBJDIR)/$(PROJECT_NAME).map,--print-memory-usage -march=$(MARCH) -mabi=$(MABI) -specs=nano.specs -lnosys -L $(SHARED_DIR)/ldscripts/
 
 
 OBJS := $(SRCS)
@@ -110,6 +110,10 @@ clean:
 
 
 
-upload: $(OBJDIR)/$(PROJECT_NAME).hex
-	python $(MIK32_UPLOADER_DIR)/mik32_upload.py --run-openocd --openocd-exec=`which openocd` --openocd-scripts $(MIK32_UPLOADER_DIR)/openocd-scripts --openocd-interface interface/ftdi/mikron-link.cfg $^
+upload:
+	python $(MIK32_UPLOADER_DIR)/mik32_upload.py --run-openocd --openocd-exec=`which openocd` --openocd-scripts $(MIK32_UPLOADER_DIR)/openocd-scripts --openocd-interface interface/ftdi/mikron-link.cfg $(OBJDIR)/$(PROJECT_NAME).hex 
+
+
+term:
+	sudo minicom -D /dev/ttyU*0 -b 115200
 
