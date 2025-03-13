@@ -43,55 +43,49 @@ int main()
 	SystemClock_Config();
 	Scr1_Timer_Init();
 
-	UART_Init(UART_0, OSC_SYSTEM_VALUE/9600, UART_CONTROL1_TE_M | UART_CONTROL1_M_8BIT_M, 0, 0);
+	UART_Init(UART_0, OSC_SYSTEM_VALUE/115200, UART_CONTROL1_TE_M | UART_CONTROL1_M_8BIT_M, 0, 0);
 
 	ADC_Init();
 
 	int16_t adc_corrected_value, adc_raw_value;
 
-	// HAL_ADC_ContinuousEnable(&hadc); /* Запуск преобразования в непрерывном режиме */
-	// adc_value = HAL_ADC_GetValue(&hadc); /* Получить текущий результат преобразования (режим непрерывного преобразования) */
-	while (1)
-	{
-
-		/***********************************Получение значения с канала***************************************/
-		// HAL_ADC_Single(&hadc);					  /* Запуск однократного преобразования для того чтобы канал переключился на заданный*/
-		// adc_value = HAL_ADC_WaitAndGetValue(&hadc); /* Ожидание и чтение данных (режим одиночного преобразования) */
-
-		// xprintf("ADC%d: %d (V = %d,%03d)\n", i, adc_value, ((adc_value * 1200) / 4095) / 1000, ((adc_value * 1200) / 4095) % 1000);
-
-		// for (volatile int i = 0; i < 1000000; i++)
-		//	 ;
-		/*****************************************************************************************************/
+	while (1) {
 
 		 if(ADC_CHANNELS == 1)
 		 	HAL_ADC_SINGLE_AND_SET_CH(hadc.Instance, 0);
 
-		/* Получение значения с разных каналов */
-		for (int j = 0; j < ADC_CHANNELS; j++)
-		{
+		if(count % 1000 == 0)
+			xprintf("Time: %08X:%08X,\t", SCR1_TIMER->MTIMEH, SCR1_TIMER->MTIME);
 
+		/* Получение значения с разных каналов */
+		for (int j = 0; j < ADC_CHANNELS; j++) {
+
+			/* Установить номер канала и сделать одиночное преобразование для того, чтобы канал переключился */
 			if(ADC_CHANNELS > 1)
 				HAL_ADC_SINGLE_AND_SET_CH(hadc.Instance, (j + 1) % ADC_CHANNELS);
 
-		adc_raw_value = HAL_ADC_WaitAndGetValue(&hadc); /* Ожидание и чтение актуальных данных (режим одиночного преобразования) */
+			/* Ожидание и чтение актуальных данных (режим одиночного преобразования) */
+			adc_raw_value = HAL_ADC_WaitAndGetValue(&hadc);
 
-		adc_corrected_value = adc_raw_value - ADC_OFFSET;
-		//adc_avg[j] = (adc_avg[j] + adc_corrected_value) / 2; /* Скользящее среднее */
-		adc_avg[j] = (adc_avg[j] * 14 + adc_corrected_value * 2) / 16; /* Сглаживание по алфа-бета */
+			adc_corrected_value = adc_raw_value - ADC_OFFSET;
+			//adc_avg[j] = (adc_avg[j] + adc_corrected_value) / 2; /* Скользящее среднее */
+			adc_avg[j] = (adc_avg[j] * 14 + adc_corrected_value * 2) / 16; /* Сглаживание по альфа-бета */
 
+			/* Печатать усредненное значение после 1000 преобразований */
 			if(count % 1000 == 0)
-			xprintf("ADC[%d]: %4d/%4d/%4d (%d,%03d V)\t", j, adc_raw_value, adc_corrected_value, adc_avg[j],
-									((adc_avg[j] * 1200) / 4095) / 1000,
-									((adc_avg[j] * 1200) / 4095) % 1000);
+				xprintf("ADC[%d]: %4d %4d %4d (%d.%03d V)\t",
+					j, adc_raw_value, adc_corrected_value, adc_avg[j],
+					((adc_avg[j] * 1200) / 4095) / 1000,
+					((adc_avg[j] * 1200) / 4095) % 1000);
+
 		}
 
-		if(count % 1000 == 0) {
-		xprintf("\n");
-		HAL_Time_SCR1TIM_DelayMs(250);
-	}
+		if(count % 1000 == 0)
+			xprintf("\r\n");
 
-	count++;
+		//HAL_Time_SCR1TIM_DelayMs(250); // Hangs here, broken HAL ?
+
+		count++;
 	}
 }
 
@@ -119,7 +113,7 @@ static void Scr1_Timer_Init(void)
 	/* Источник тактирования */
 	/* Делитель частоты 10-битное число */
 
-	HAL_SCR1_Timer_Init(HAL_SCR1_TIMER_CLKSRC_INTERNAL, 0);
+	HAL_SCR1_Timer_Init(HAL_SCR1_TIMER_CLKSRC_INTERNAL, 0); // 0 - 32 MHz
 }
 
 
@@ -127,10 +121,15 @@ static void ADC_Init(void)
 {
 	hadc.Instance = ANALOG_REG;
 
+	/* Выбор канала АЦП */
 	hadc.Init.Sel = ADC_CHANNEL4;
-	hadc.Init.EXTRef = ADC_EXTREF_OFF;	/* Выбор источника опорного напряжения: «1» - внешний; «0» - встроенный */
+
+	/* Выбор источника опорного напряжения: «1» - внешний; «0» - встроенный */
+	hadc.Init.EXTRef = ADC_EXTREF_OFF;	
 	//hadc.Init.EXTRef = ADC_EXTREF_ON;
-	hadc.Init.EXTClb = ADC_EXTCLB_ADCREF; /* Выбор источника внешнего опорного напряжения: «1» - внешний вывод; «0» - настраиваемый ОИН */
+
+	/* Выбор внешнего опорного напряжения: «1» - внешний вывод; «0» - настраиваемый ОИН */
+	hadc.Init.EXTClb = ADC_EXTCLB_ADCREF;
 
 	HAL_ADC_Init(&hadc);
 }
@@ -140,19 +139,14 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef *hadc)
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 	__HAL_PCC_ANALOG_REGS_CLK_ENABLE();
 
-	if ((hadc->Init.EXTClb == ADC_EXTCLB_ADCREF) && (hadc->Init.EXTRef == ADC_EXTREF_ON))
-	{
-#ifdef MIK32V0
-		GPIO_InitStruct.Pin = GPIO_PIN_10;
-#endif
-
-#ifdef MIK32V2
-		GPIO_InitStruct.Pin = GPIO_PIN_11;
-#endif
-	}
-
 	GPIO_InitStruct.Mode = HAL_GPIO_MODE_ANALOG;
 	GPIO_InitStruct.Pull = HAL_GPIO_PULL_NONE;
+
+	/* Настройка входа референсного напряжения для АЦП */
+	if ((hadc->Init.EXTClb == ADC_EXTCLB_ADCREF) && (hadc->Init.EXTRef == ADC_EXTREF_ON)) {
+		GPIO_InitStruct.Pin = GPIO_PIN_11;
+	}
+
 	HAL_GPIO_Init(GPIO_1, &GPIO_InitStruct);
 
 	/* Настройка выводов АЦП */
